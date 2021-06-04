@@ -40,6 +40,9 @@ class AMISComponent : public Component, public uart::UARTDevice {
   void set_reactive_instantaneous_power_a_negative_sensor(sensor::Sensor *sensor) {
     this->reactive_instantaneous_power_a_negative_sensor = sensor;
   }
+  void set_timestamp_sensor(sensor::Sensor *sensor) {
+    this->timestamp_sensor = sensor;
+  }
 
   float get_setup_priority() const override { return setup_priority::DATA; }
 
@@ -59,6 +62,7 @@ class AMISComponent : public Component, public uart::UARTDevice {
   sensor::Sensor *instantaneous_power_a_negative_sensor{nullptr};
   sensor::Sensor *reactive_instantaneous_power_a_positive_sensor{nullptr};
   sensor::Sensor *reactive_instantaneous_power_a_negative_sensor{nullptr};
+  sensor::Sensor *timestamp_sensor{nullptr};
 };
 
 }  // namespace rdm6300

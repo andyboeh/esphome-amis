@@ -5,9 +5,11 @@ from esphome.const import (
     CONF_ID,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_TIMESTAMP,
     ICON_EMPTY,
     UNIT_WATT,
     UNIT_WATT_HOURS,
+    UNIT_SECOND,
 #    UNIT_VOLT_AMPS_REACTIVE_HOURS,
     UNIT_VOLT_AMPS_REACTIVE,
 )
@@ -26,6 +28,7 @@ CONF_INSTANTANEOUS_POWER_A_POSITIVE = 'instantaneous_power_a_positive'
 CONF_INSTANTANEOUS_POWER_A_NEGATIVE = 'instantaneous_power_a_negative'
 CONF_REACTIVE_INSTANTANEOUS_POWER_A_POSITIVE = 'reactive_instantaneous_power_a_positive'
 CONF_REACTIVE_INSTANTANEOUS_POWER_A_NEGATIVE = 'reactive_instantaneous_power_a_negative'
+CONF_TIMESTAMP = 'timestamp'
 
 CONFIG_SCHEMA = (
     cv.Schema(
@@ -56,6 +59,9 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_REACTIVE_INSTANTANEOUS_POWER_A_NEGATIVE): sensor.sensor_schema(
                 UNIT_VOLT_AMPS_REACTIVE, ICON_EMPTY, 1, DEVICE_CLASS_POWER
             ),
+            cv.Optional(CONF_TIMESTAMP): sensor.sensor_schema(
+                UNIT_SECOND, ICON_EMPTY, 1, DEVICE_CLASS_TIMESTAMP
+            ),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -79,6 +85,7 @@ def to_code(config):
         CONF_INSTANTANEOUS_POWER_A_NEGATIVE,
         CONF_REACTIVE_INSTANTANEOUS_POWER_A_POSITIVE,
         CONF_REACTIVE_INSTANTANEOUS_POWER_A_NEGATIVE,
+        CONF_TIMESTAMP,
     ]:
         if not key in config:
             continue

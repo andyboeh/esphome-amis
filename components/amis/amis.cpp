@@ -49,7 +49,7 @@ void amis::AMISComponent::amis_decode() {
 
   if(cs == this->buffer[this->bytes-2]) {
     ESP_LOGD(TAG, "checksum correct, decrypting");
-    //memcpy(this->iv, &this->buffer[7], 8);
+
     this->iv[0] = this->buffer[11];
     this->iv[1] = this->buffer[12];
     this->iv[2] = this->buffer[7];
@@ -128,7 +128,8 @@ void amis::AMISComponent::amis_decode() {
       this->reactive_instantaneous_power_a_positive_sensor->publish_state(this->a_result[6]);
     if(this->reactive_instantaneous_power_a_negative_sensor)
       this->reactive_instantaneous_power_a_negative_sensor->publish_state(this->a_result[7]);
-    
+    if(this->timestamp_sensor)
+      this->timestamp_sensor->publish_state(mktime(&t));
 
   } else {
     ESP_LOGD(TAG, "check bad");

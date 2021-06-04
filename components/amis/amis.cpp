@@ -21,13 +21,6 @@ static const char *TAG = "amis";
 #define OFFS_470 66
 #define OFFS_11280 74
 
-// Probieren wir das mal ohne Poll, mit loop() und sehen, wie schnell oder langsam
-// da die Daten kommen. Ggf. müssen wir das etwas verlangsamen, aber loop() sollte
-// etwa alle 10ms aufgerufen werden - das wäre eh passend. 
-// Setup brauchen wir dann nicht, weil wir auf den ersten Discover() Frame 
-// warten müssen, bevor er anspricht. dann 0x5e senden und "echte" Daten
-// müssten kommen. AES decodieren und fertig.
-
 void amis::AMISComponent::setup() {
   this->bytes = 0;
   this->expect = 0;
@@ -70,9 +63,26 @@ void amis::AMISComponent::amis_decode() {
 
     //FIXME: If we receive duplicate timestamps, we should throught the value away!
     // https://github.com/volkszaehler/vzlogger/blob/master/src/protocols/MeterOMS.cpp
-    // siehe dort Zeile 591
+    // line 591
     ESP_LOGD(TAG, "0x%02x%02x%02x%02x%02x", this->decode_buffer[8], this->decode_buffer[7], this->decode_buffer[6], this->decode_buffer[5], this->decode_buffer[4]);
     ESP_LOGD(TAG, "dow: %d", this->decode_buffer[6] >> 5);
+
+    struct tm t;
+    t.tm_sec = this->decode_buffer[4] & 0x3f;
+    t.tm_min = this->decode_buffer[5] & 0x3f;
+    t.tm_hour = this->decode_buffer[6] & 0x1f;
+    t.tm_mday = this->decode_buffer[7] & 0x1f;
+    t.tm_mon = this->decode_buffer[8] & 0xf;
+    if(t.tm_mon > 0)
+        t.tm_mon -= 1;
+    t.tm_year = 100 + (((this->decode_buffer[7] & 0xe0) >> 5) | ((this->decode_buffer[8] & 0xf0) >> 1));
+    t.tm_isdst = ((this->decode_buffer[4] & 0x40) == 0x40) ? 1 : 0;
+    if((this->decode_buffer[5] & 0x80) == 0x80) {
+      // time invalid!
+    } else {
+        ESP_LOGD(TAG, "time=%.2d-%.2d-%.2d %.2d:%.2d:%.2d",
+                 1900 + t.tm_year, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+    }
 
     memcpy(&this->a_result[0], this->decode_buffer + OFFS_180, 4);
     memcpy(&this->a_result[1], this->decode_buffer + OFFS_280, 4);

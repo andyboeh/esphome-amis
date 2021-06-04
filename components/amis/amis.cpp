@@ -88,7 +88,7 @@ void amis::AMISComponent::amis_decode() {
     } else {
         ESP_LOGD(TAG, "time=%.2d-%.2d-%.2d %.2d:%.2d:%.2d",
                  1900 + t.tm_year, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
-        ESP_LOGD(TAG, "timestamp=%d", mktime(&t));
+        ESP_LOGD(TAG, "timestamp=%ld", mktime(&t));
     }
 
     memcpy(&this->a_result[0], this->decode_buffer + OFFS_180, 4);

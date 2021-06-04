@@ -49,7 +49,15 @@ void amis::AMISComponent::amis_decode() {
 
   if(cs == this->buffer[this->bytes-2]) {
     ESP_LOGD(TAG, "checksum correct, decrypting");
-    memcpy(this->iv, &this->buffer[7], 8);
+    //memcpy(this->iv, &this->buffer[7], 8);
+    this->iv[0] = this->buffer[11];
+    this->iv[1] = this->buffer[12];
+    this->iv[2] = this->buffer[7];
+    this->iv[3] = this->buffer[8];
+    this->iv[4] = this->buffer[9];
+    this->iv[5] = this->buffer[10];
+    this->iv[6] = this->buffer[13];
+    this->iv[7] = this->buffer[14];
     for(int i=8; i<16; i++)
       this->iv[i] = this->buffer[15];
 

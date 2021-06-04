@@ -78,7 +78,7 @@ void amis::AMISComponent::amis_decode() {
     t.tm_year = 100 + (((this->decode_buffer[7] & 0xe0) >> 5) | ((this->decode_buffer[8] & 0xf0) >> 1));
     t.tm_isdst = ((this->decode_buffer[4] & 0x40) == 0x40) ? 1 : 0;
     if((this->decode_buffer[5] & 0x80) == 0x80) {
-      // time invalid!
+        ESP_LOGD(TAG, "time invalid");
     } else {
         ESP_LOGD(TAG, "time=%.2d-%.2d-%.2d %.2d:%.2d:%.2d",
                  1900 + t.tm_year, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);

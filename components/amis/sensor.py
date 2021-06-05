@@ -28,7 +28,7 @@ CONF_INSTANTANEOUS_POWER_A_POSITIVE = 'instantaneous_power_a_positive'
 CONF_INSTANTANEOUS_POWER_A_NEGATIVE = 'instantaneous_power_a_negative'
 CONF_REACTIVE_INSTANTANEOUS_POWER_A_POSITIVE = 'reactive_instantaneous_power_a_positive'
 CONF_REACTIVE_INSTANTANEOUS_POWER_A_NEGATIVE = 'reactive_instantaneous_power_a_negative'
-#CONF_TIMESTAMP = 'timestamp'
+CONF_TIMESTAMP = 'timestamp'
 
 CONFIG_SCHEMA = (
     cv.Schema(

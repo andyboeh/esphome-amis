@@ -1,0 +1,54 @@
+esphome:
+  name: amis
+  platform: ESP32
+  board: esp-wrover-kit
+
+wifi:
+  ssid: "xxxxxxx"
+  password: "xxxxxxxxxxxx"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "AMIS Fallback Hotspot"
+    password: "xxxxxxxxxxxxxx"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+external_components:
+  - source: github://andyboeh/esphome-amis
+    components: amis
+
+uart:
+  id: uart_bus
+  tx_pin: 32
+  rx_pin: 16
+  baud_rate: 9600
+  parity: EVEN
+
+sensor:
+  - platform: amis
+    power_grid_key: 1234567890ABCDEF1234567890ABCDEF
+    energy_a_positive:
+      name: Energy A+
+    energy_a_negative:
+      name: Energy A-
+#    reactive_energy_a_positive:
+#      name: Reactive Energy A+
+#    reactive_energy_a_negative:
+#      name: Reactive Energy A-
+    instantaneous_power_a_positive:
+      name: "Instantaneous Power A+"
+    instantaneous_power_a_negative:
+      name: Instantaneous Power A-
+    reactive_instantaneous_power_a_positive:
+      name: Reactive Instantaneous Power A+
+    reactive_instantaneous_power_a_negative:
+      name: Reactive Instantaneous Power A-

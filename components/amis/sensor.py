@@ -9,7 +9,7 @@ from esphome.const import (
     ICON_EMPTY,
     UNIT_WATT,
     UNIT_WATT_HOURS,
-    UNIT_SECOND,
+    UNIT_MINUTE,
 #    UNIT_VOLT_AMPS_REACTIVE_HOURS,
     UNIT_VOLT_AMPS_REACTIVE,
 )
@@ -60,7 +60,7 @@ CONFIG_SCHEMA = (
                 UNIT_VOLT_AMPS_REACTIVE, ICON_EMPTY, 1, DEVICE_CLASS_POWER
             ),
             cv.Optional(CONF_TIMESTAMP): sensor.sensor_schema(
-                UNIT_SECOND, ICON_EMPTY, 1, DEVICE_CLASS_TIMESTAMP
+                UNIT_MINUTE, ICON_EMPTY, 1, DEVICE_CLASS_TIMESTAMP
             ),
         }
     )

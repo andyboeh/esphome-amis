@@ -128,7 +128,7 @@ void amis::AMISComponent::amis_decode() {
     if(this->reactive_instantaneous_power_a_negative_sensor)
       this->reactive_instantaneous_power_a_negative_sensor->publish_state(this->a_result[7]);
     if(this->timestamp_sensor)
-      this->timestamp_sensor->publish_state(mktime(&t));
+      this->timestamp_sensor->publish_state(mktime(&t) / 60.0);
 
   } else {
     ESP_LOGD(TAG, "check bad");

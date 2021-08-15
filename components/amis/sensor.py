@@ -7,10 +7,11 @@ from esphome.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_TIMESTAMP,
     ICON_EMPTY,
+    STATE_CLASS_MEASUREMENT,
     UNIT_WATT,
     UNIT_WATT_HOURS,
     UNIT_SECOND,
-#    UNIT_VOLT_AMPS_REACTIVE_HOURS,
+    UNIT_VOLT_AMPS_REACTIVE_HOURS,
     UNIT_VOLT_AMPS_REACTIVE,
 )
 
@@ -36,28 +37,52 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_POWER_GRID_KEY): cv.string, 
             cv.GenerateID(): cv.declare_id(AMISComponent),
             cv.Optional(CONF_ENERGY_A_POSITIVE): sensor.sensor_schema(
-                UNIT_WATT_HOURS, ICON_EMPTY, 1, DEVICE_CLASS_ENERGY
+                unit_of_measurement=UNIT_WATT_HOURS,
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_ENERGY,
+                state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_ENERGY_A_NEGATIVE): sensor.sensor_schema(
-                UNIT_WATT_HOURS, ICON_EMPTY, 1, DEVICE_CLASS_ENERGY
+                unit_of_measurement=UNIT_WATT_HOURS,
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_ENERGY,
+                state_class=STATE_CLASS_MEASUREMENT,
             ),
-#            cv.Optional(CONF_REACTIVE_ENERGY_A_POSITIVE): sensor.sensor_schema(
-#                UNIT_VOLT_AMPS_REACTIVE_HOURS, ICON_EMPTY, 1, DEVICE_CLASS_ENERGY
-#            ),
-#            cv.Optional(CONF_REACTIVE_ENERGY_A_NEGATIVE): sensor.sensor_schema(
-#                UNIT_VOLT_AMPS_REACTIVE_HOURS, ICON_EMPTY, 1, DEVICE_CLASS_ENERGY
-#            ),
+            cv.Optional(CONF_REACTIVE_ENERGY_A_POSITIVE): sensor.sensor_schema(
+                unit_of_measurement=UNIT_VOLT_AMPS_REACTIVE_HOURS,
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_ENERGY,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_REACTIVE_ENERGY_A_NEGATIVE): sensor.sensor_schema(
+                unit_of_measurement=UNIT_VOLT_AMPS_REACTIVE_HOURS,
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_ENERGY,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
             cv.Optional(CONF_INSTANTANEOUS_POWER_A_POSITIVE): sensor.sensor_schema(
-                UNIT_WATT, ICON_EMPTY, 1, DEVICE_CLASS_POWER
+                unit_of_measurement=UNIT_WATT,
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_POWER,
+                state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_INSTANTANEOUS_POWER_A_NEGATIVE): sensor.sensor_schema(
-                UNIT_WATT, ICON_EMPTY, 1, DEVICE_CLASS_POWER
+                unit_of_measurement=UNIT_WATT,
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_POWER,
+                state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_REACTIVE_INSTANTANEOUS_POWER_A_POSITIVE): sensor.sensor_schema(
-                UNIT_VOLT_AMPS_REACTIVE, ICON_EMPTY, 1, DEVICE_CLASS_POWER
+                unit_of_measurement=UNIT_VOLT_AMPS_REACTIVE,
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_POWER,
+                state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_REACTIVE_INSTANTANEOUS_POWER_A_NEGATIVE): sensor.sensor_schema(
-                UNIT_VOLT_AMPS_REACTIVE, ICON_EMPTY, 1, DEVICE_CLASS_POWER
+                unit_of_measurement=UNIT_VOLT_AMPS_REACTIVE,
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_POWER,
+                state_class=STATE_CLASS_MEASUREMENT,
             ),
 #            cv.Optional(CONF_TIMESTAMP): sensor.sensor_schema(
 #                UNIT_SECOND, ICON_EMPTY, 1, DEVICE_CLASS_TIMESTAMP

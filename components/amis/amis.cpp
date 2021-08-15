@@ -69,6 +69,11 @@ void amis::AMISComponent::amis_decode() {
 
     yield();
 
+    if(this->decode_buffer[0] != 0x2f || this->decode_buffer[1] != 0x2f) {
+      ESP_LOGD(TAG, "decryption sanity check failed.");
+      goto out;
+    }
+
     // https://github.com/volkszaehler/vzlogger/blob/master/src/protocols/MeterOMS.cpp
     // line 591
 
@@ -85,6 +90,7 @@ void amis::AMISComponent::amis_decode() {
 
     if((this->decode_buffer[5] & 0x80) == 0x80) {
         ESP_LOGD(TAG, "time invalid");
+        goto out;
     } else {
         ESP_LOGD(TAG, "time=%.2d-%.2d-%.2d %.2d:%.2d:%.2d",
                  1900 + t.tm_year, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
@@ -127,7 +133,7 @@ void amis::AMISComponent::amis_decode() {
       this->reactive_instantaneous_power_a_positive_sensor->publish_state(this->a_result[6]);
     if(this->reactive_instantaneous_power_a_negative_sensor)
       this->reactive_instantaneous_power_a_negative_sensor->publish_state(this->a_result[7]);
-    // FIXME: We loose quite a few seconds precision of we convert the timestamp to float
+    // FIXME: We loose quite a few seconds precision if we convert the timestamp to float
     // We should probably use a text_sensor for this, but this adds
     // some more complexity.
     if(this->timestamp_sensor)
@@ -137,6 +143,7 @@ void amis::AMISComponent::amis_decode() {
     ESP_LOGD(TAG, "check bad");
   }
 
+out:
   this->bytes = 0;
   this->expect = 0;
 

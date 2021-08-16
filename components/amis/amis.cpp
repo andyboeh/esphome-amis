@@ -1,7 +1,6 @@
 #include "amis.h"
 #include "aes.h"
 #include "esphome/core/log.h"
-#include <sstream>
 
 namespace esphome {
 namespace amis {
@@ -112,13 +111,7 @@ void amis::AMISComponent::amis_decode() {
     memcpy(&this->a_result[6], this->decode_buffer + OFFS_370, 4);
     memcpy(&this->a_result[7], this->decode_buffer + OFFS_470, 4);
     memcpy(&this->a_result[8], this->decode_buffer + OFFS_11280, 4);
-    
-    std::stringstream stream;
-    for(int i=0; i<this->bytes; i++)
-      stream << std::hex << this->buffer[i];
-    std::string result(stream.str());
-    
-    ESP_LOGD(TAG, "Raw data: %s", result.c_str());
+
     ESP_LOGD(TAG, "OFFS_180: %d", this->a_result[0]);
     ESP_LOGD(TAG, "OFFS_280: %d", this->a_result[1]);
     ESP_LOGD(TAG, "OFFS_381: %d", this->a_result[2]);

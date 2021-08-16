@@ -1,6 +1,8 @@
 #include "amis.h"
 #include "aes.h"
 #include "esphome/core/log.h"
+#include <sstream>
+#include <iomanip>
 
 namespace esphome {
 namespace amis {
@@ -72,7 +74,7 @@ void amis::AMISComponent::amis_decode() {
     AES128_CBC_decrypt_buffer(this->decode_buffer + 48, this->buffer + OFFS_DIF + 48, 16, 0, 0);
     AES128_CBC_decrypt_buffer(this->decode_buffer + 64, this->buffer + OFFS_DIF + 64, 16, 0, 0);
 
-    yield();
+    //yield();
 
     if(this->decode_buffer[0] != 0x2f || this->decode_buffer[1] != 0x2f) {
       ESP_LOGD(TAG, "decryption sanity check failed.");
@@ -112,6 +114,16 @@ void amis::AMISComponent::amis_decode() {
     memcpy(&this->a_result[7], this->decode_buffer + OFFS_470, 4);
     memcpy(&this->a_result[8], this->decode_buffer + OFFS_11280, 4);
 
+
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    for (int i = 0; i < this->bytes; ++i)
+    {
+        ss << std::setw(2) << static_cast<unsigned>(this->buffer[i]);
+    }
+    std::string mystr = ss.str();
+
+    ESP_LOGD(TAG, "Raw: %s", mystr.c_str());
     ESP_LOGD(TAG, "OFFS_180: %d", this->a_result[0]);
     ESP_LOGD(TAG, "OFFS_280: %d", this->a_result[1]);
     ESP_LOGD(TAG, "OFFS_381: %d", this->a_result[2]);

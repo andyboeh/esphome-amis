@@ -44,6 +44,11 @@ void amis::AMISComponent::amis_decode() {
   char cs=0;
   int i;
 
+  if(this->bytes < 78) {
+    ESP_LOGD(TAG, "received incomplete frame");
+    goto out;
+  }
+
   for(int i=4; i<bytes-2; i++)
     cs += this->buffer[i];
 
@@ -187,7 +192,7 @@ void amis::AMISComponent::loop() {
       }
     }
 
-    if(this->expect && this->bytes >= expect) {
+    if(this->expect && this->bytes >= this->expect) {
       ESP_LOGD(TAG, "amis_decode");
       this->amis_decode();
     }

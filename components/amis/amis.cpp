@@ -1,7 +1,7 @@
 #include "amis.h"
 #include "aes.h"
 #include "esphome/core/log.h"
-#include <iostream>
+#include <sstream>
 
 namespace esphome {
 namespace amis {

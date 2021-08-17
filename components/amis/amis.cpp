@@ -13,16 +13,6 @@ static const char *TAG = "amis";
 
 #define OFFS_DIF 19
 
-#define OFFS_180 12
-#define OFFS_280 19
-#define OFFS_381 28
-#define OFFS_481 38
-#define OFFS_170 44
-#define OFFS_270 51
-#define OFFS_370 58
-#define OFFS_470 66
-#define OFFS_11280 74
-
 void amis::AMISComponent::setup() {
   this->bytes = 0;
   this->expect = 0;
@@ -42,16 +32,66 @@ void amis::AMISComponent::set_power_grid_key(const std::string &power_grid_key) 
   this->hex2bin(power_grid_key, this->key);
 }
 
+uint8_t amis::AMISComponent::dif2len(uint8_t dif) {
+  switch (dif&0x0F)
+  {
+    case 0x0:
+      return 0;
+    case 0x1:
+      return 1;
+    case 0x2:
+      return 2;
+    case 0x3:
+      return 3;
+    case 0x4:
+      return 4;
+    case 0x5:
+      return 4;
+    case 0x6:
+      return 6;
+    case 0x7:
+      return 8;
+    case 0x8:
+      return 0;
+    case 0x9:
+      return 1;
+    case 0xA:
+      return 2;
+    case 0xB:
+      return 3;
+    case 0xC:
+      return 4;
+    case 0xD: 
+      // variable data length, 
+      // data length stored in data field
+      return 0;
+    case 0xE:
+      return 6;
+    case 0xF:
+      return 8;
+
+    default: // never reached
+      return 0x00;
+  }
+}
+
 void amis::AMISComponent::amis_decode() {
   char cs=0;
   int i;
+  uint32_t temp;
+  struct tm t;
+  uint8_t dif;
+  uint8_t vif;
+  uint8_t dife;
+  uint8_t vife;
+  uint8_t data_len;
 
   if(this->bytes < 78) {
     ESP_LOGD(TAG, "received incomplete frame");
     goto out;
   }
 
-  for(int i=4; i<bytes-2; i++)
+  for(i=4; i<bytes-2; i++)
     cs += this->buffer[i];
 
   if(cs == this->buffer[this->bytes-2]) {
@@ -74,8 +114,6 @@ void amis::AMISComponent::amis_decode() {
     AES128_CBC_decrypt_buffer(this->decode_buffer + 48, this->buffer + OFFS_DIF + 48, 16, 0, 0);
     AES128_CBC_decrypt_buffer(this->decode_buffer + 64, this->buffer + OFFS_DIF + 64, 16, 0, 0);
 
-    //yield();
-
     if(this->decode_buffer[0] != 0x2f || this->decode_buffer[1] != 0x2f) {
       ESP_LOGD(TAG, "decryption sanity check failed.");
       goto out;
@@ -84,77 +122,142 @@ void amis::AMISComponent::amis_decode() {
     // https://github.com/volkszaehler/vzlogger/blob/master/src/protocols/MeterOMS.cpp
     // line 591
 
-    struct tm t;
-    t.tm_sec = this->decode_buffer[4] & 0x3f;
-    t.tm_min = this->decode_buffer[5] & 0x3f;
-    t.tm_hour = this->decode_buffer[6] & 0x1f;
-    t.tm_mday = this->decode_buffer[7] & 0x1f;
-    t.tm_mon = this->decode_buffer[8] & 0xf;
-    if(t.tm_mon > 0)
-        t.tm_mon -= 1;
-    t.tm_year = 100 + (((this->decode_buffer[7] & 0xe0) >> 5) | ((this->decode_buffer[8] & 0xf0) >> 1));
-    t.tm_isdst = ((this->decode_buffer[4] & 0x40) == 0x40) ? 1 : 0;
 
-    if((this->decode_buffer[5] & 0x80) == 0x80) {
-        ESP_LOGD(TAG, "time invalid");
+
+    i = 2;
+    // 80 is the maximum size of data that we decrypt
+    while(i < 80) {
+      dif = this->decode_buffer[i];
+      if(dif == 0x0f or dif == 0x1f) {
+        ESP_LOGE(TAG, "Variable length not supported.");
         goto out;
-    } else {
-        ESP_LOGD(TAG, "time=%.2d-%.2d-%.2d %.2d:%.2d:%.2d",
+      }
+      dife = 0;
+      vife = 0;
+      data_len = this->dif2len(dif);
+      
+      if(dif & 0x80) {
+        while(this->decode_buffer[i] & 0x80) {
+          dife = this->decode_buffer[i+1];
+          i++;
+        }
+      }
+
+      i++;
+
+      vif = this->decode_buffer[i];
+      if(vif == 0x7c) {
+        ESP_LOGE(TAG, "Variable length vif not supported.");
+        goto out;
+      }
+      
+      if(vif & 0x80) {
+        while(this->decode_buffer[i] & 0x80) {
+          vife = this->decode_buffer[i+1];
+          i++;
+        }
+      }
+      if((dif & 0x0f) == 0x0d) {
+        ESP_LOGE(TAG, "Variable length data not supported.");
+        goto out;
+      }
+      
+      i++;
+      
+      switch(vif) {
+        case 0x6d:
+          t.tm_sec = this->decode_buffer[i] & 0x3f;
+          t.tm_min = this->decode_buffer[i+1] & 0x3f;
+          t.tm_hour = this->decode_buffer[i+2] & 0x1f;
+          t.tm_mday = this->decode_buffer[i+3] & 0x1f;
+          t.tm_mon = this->decode_buffer[i+4] & 0xf;
+          if(t.tm_mon > 0)
+            t.tm_mon -= 1;
+          t.tm_year = 100 + (((this->decode_buffer[i+3] & 0xe0) >> 5) | ((this->decode_buffer[i+4] & 0xf0) >> 1));
+          t.tm_isdst = ((this->decode_buffer[i] & 0x40) == 0x40) ? 1 : 0;
+
+          if((this->decode_buffer[i+1] & 0x80) == 0x80) {
+            ESP_LOGD(TAG, "time invalid");
+            goto out;
+          } else {
+            ESP_LOGD(TAG, "time=%.2d-%.2d-%.2d %.2d:%.2d:%.2d",
                  1900 + t.tm_year, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
-        ESP_LOGD(TAG, "timestamp=%ld", mktime(&t));
+            ESP_LOGD(TAG, "timestamp=%ld", mktime(&t));
+          }
+          if(this->timestamp_sensor)
+            this->timestamp_sensor->publish_state(mktime(&t));
+        break;
+        case 0x03:
+          if(dif == 0x04) {
+            // 1.8.0
+            memcpy(&temp, &this->decode_buffer[i], data_len);
+            ESP_LOGD(TAG, "1.8.0: %d", temp);
+            if(this->energy_a_positive_sensor)
+              this->energy_a_positive_sensor->publish_state(temp);
+          }
+        break;
+        case 0x83:
+          if(dif == 0x04 && vife == 0x3c) {
+            // 2.8.0
+            memcpy(&temp, &this->decode_buffer[i], data_len);
+            ESP_LOGD(TAG, "2.8.0: %d", temp);
+            if(this->energy_a_negative_sensor)
+              this->energy_a_negative_sensor->publish_state(temp);
+          }
+        break;
+        case 0xfb:
+          if(dif == 0x84 && dife == 0x10 && vife == 0x73) {
+            // 3.8.1
+            memcpy(&temp, &this->decode_buffer[i], data_len);
+            ESP_LOGD(TAG, "3.8.1: %d", temp);
+            if(this->reactive_energy_a_positive_sensor)
+              this->reactive_energy_a_positive_sensor->publish_state(temp);
+          }
+          if(dif == 0x84 && dife == 0x10 && vife == 0x3c) {
+            // 4.8.1
+            memcpy(&temp, &this->decode_buffer[i], data_len);
+            ESP_LOGD(TAG, "4.8.1: %d", temp);
+            if(this->reactive_energy_a_negative_sensor)
+              this->reactive_energy_a_negative_sensor->publish_state(temp);
+          }
+          if(dif == 0x04 && dife == 0x00 && vife == 0x14) {
+            // 3.7.0
+            memcpy(&temp, &this->decode_buffer[i], data_len);
+            ESP_LOGD(TAG, "3.7.0: %d", temp);
+            if(this->reactive_instantaneous_power_a_positive_sensor)
+              this->reactive_instantaneous_power_a_positive_sensor->publish_state(temp);
+          }
+          if(dif == 0x04 && dife == 0x00 && vife == 0x3c) {
+            // 4.7.0
+            memcpy(&temp, &this->decode_buffer[i], data_len);
+            ESP_LOGD(TAG, "4.7.0: %d", temp);
+            if(this->reactive_instantaneous_power_a_negative_sensor)
+              this->reactive_instantaneous_power_a_negative_sensor->publish_state(temp);
+          }
+        break;
+        case 0x2b:
+          if(dif == 0x04) {
+            // 1.7.0
+            memcpy(&temp, &this->decode_buffer[i], data_len);
+            ESP_LOGD(TAG, "1.7.0: %d", temp);
+            if(this->instantaneous_power_a_positive_sensor)
+              this->instantaneous_power_a_positive_sensor->publish_state(temp);
+          }
+        break;
+        case 0xab:
+          if(dif == 0x04 && vife == 0x3c) {
+            // 2.7.0
+            memcpy(&temp, &this->decode_buffer[i], data_len);
+            ESP_LOGD(TAG, "2.7.0: %d", temp);
+            if(this->instantaneous_power_a_negative_sensor)
+              this->instantaneous_power_a_negative_sensor->publish_state(temp);
+          }
+        break;
+      }
+      
+      
+      i += data_len;
     }
-
-    memcpy(&this->a_result[0], this->decode_buffer + OFFS_180, 4);
-    memcpy(&this->a_result[1], this->decode_buffer + OFFS_280, 4);
-    memcpy(&this->a_result[2], this->decode_buffer + OFFS_381, 4);
-    memcpy(&this->a_result[3], this->decode_buffer + OFFS_481, 4);
-    memcpy(&this->a_result[4], this->decode_buffer + OFFS_170, 4);
-    memcpy(&this->a_result[5], this->decode_buffer + OFFS_270, 4);
-    memcpy(&this->a_result[6], this->decode_buffer + OFFS_370, 4);
-    memcpy(&this->a_result[7], this->decode_buffer + OFFS_470, 4);
-    memcpy(&this->a_result[8], this->decode_buffer + OFFS_11280, 4);
-
-
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (int i = 0; i < this->bytes; ++i)
-    {
-        ss << std::setw(2) << static_cast<unsigned>(this->buffer[i]);
-    }
-    std::string mystr = ss.str();
-
-    ESP_LOGD(TAG, "Raw: %s", mystr.c_str());
-    ESP_LOGD(TAG, "OFFS_180: %d", this->a_result[0]);
-    ESP_LOGD(TAG, "OFFS_280: %d", this->a_result[1]);
-    ESP_LOGD(TAG, "OFFS_381: %d", this->a_result[2]);
-    ESP_LOGD(TAG, "OFFS_481: %d", this->a_result[3]);
-    ESP_LOGD(TAG, "OFFS_170: %d", this->a_result[4]);
-    ESP_LOGD(TAG, "OFFS_270: %d", this->a_result[5]);
-    ESP_LOGD(TAG, "OFFS_370: %d", this->a_result[6]);
-    ESP_LOGD(TAG, "OFFS_470: %d", this->a_result[7]);
-    ESP_LOGD(TAG, "OFFS_11280: %d", this->a_result[8]);
-    
-    if(this->energy_a_positive_sensor)
-      this->energy_a_positive_sensor->publish_state(this->a_result[0]);
-    if(this->energy_a_negative_sensor)
-      this->energy_a_negative_sensor->publish_state(this->a_result[1]);
-    if(this->reactive_energy_a_positive_sensor)
-      this->reactive_energy_a_positive_sensor->publish_state(this->a_result[2]);
-    if(this->reactive_energy_a_negative_sensor)
-      this->reactive_energy_a_negative_sensor->publish_state(this->a_result[3]);
-    if(this->instantaneous_power_a_positive_sensor)
-      this->instantaneous_power_a_positive_sensor->publish_state(this->a_result[4]);
-    if(this->instantaneous_power_a_negative_sensor)
-      this->instantaneous_power_a_negative_sensor->publish_state(this->a_result[5]);
-    if(this->reactive_instantaneous_power_a_positive_sensor)
-      this->reactive_instantaneous_power_a_positive_sensor->publish_state(this->a_result[6]);
-    if(this->reactive_instantaneous_power_a_negative_sensor)
-      this->reactive_instantaneous_power_a_negative_sensor->publish_state(this->a_result[7]);
-    // FIXME: We loose quite a few seconds precision if we convert the timestamp to float
-    // We should probably use a text_sensor for this, but this adds
-    // some more complexity.
-    if(this->timestamp_sensor)
-      this->timestamp_sensor->publish_state(mktime(&t));
 
   } else {
     ESP_LOGD(TAG, "check bad");

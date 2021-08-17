@@ -11,6 +11,7 @@ namespace amis {
 class AMISComponent : public Component, public uart::UARTDevice {
  public:
   void hex2bin(const std::string s, uint8_t *buf);
+  uint8_t dif2len(uint8_t dif);
   void setup() override;
   void dump_config() override;
   void loop() override;
@@ -53,7 +54,6 @@ class AMISComponent : public Component, public uart::UARTDevice {
   int expect;
   uint8_t iv[16];
   uint8_t key[16];
-  uint32_t a_result[9];
   sensor::Sensor *energy_a_positive_sensor{nullptr};
   sensor::Sensor *energy_a_negative_sensor{nullptr};
   sensor::Sensor *reactive_energy_a_positive_sensor{nullptr};

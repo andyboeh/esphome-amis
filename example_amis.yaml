@@ -26,6 +26,10 @@ external_components:
   - source: github://andyboeh/esphome-amis
     components: amis
 
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
 uart:
   id: uart_bus
   tx_pin: 32
@@ -40,15 +44,25 @@ sensor:
       name: Energy A+
     energy_a_negative:
       name: Energy A-
-#    reactive_energy_a_positive:
-#      name: Reactive Energy A+
-#    reactive_energy_a_negative:
-#      name: Reactive Energy A-
+    reactive_energy_a_positive:
+      name: Reactive Energy A+
+    reactive_energy_a_negative:
+      name: Reactive Energy A-
     instantaneous_power_a_positive:
       name: "Instantaneous Power A+"
+      id: instantaneous_power_a
     instantaneous_power_a_negative:
       name: Instantaneous Power A-
     reactive_instantaneous_power_a_positive:
       name: Reactive Instantaneous Power A+
     reactive_instantaneous_power_a_negative:
       name: Reactive Instantaneous Power A-
+
+  - platform: total_daily_energy
+    name: "AMIS Daily Energy"
+    power_id: instantaneous_power_a
+    filters:
+        # Multiplication factor from W to kW is 0.001
+        - multiply: 0.001
+    unit_of_measurement: kWh
+    icon: mdi:clock-alert

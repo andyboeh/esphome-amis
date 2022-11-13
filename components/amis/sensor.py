@@ -8,6 +8,7 @@ from esphome.const import (
     DEVICE_CLASS_TIMESTAMP,
     ICON_EMPTY,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     UNIT_WATT,
     UNIT_WATT_HOURS,
     UNIT_SECOND,
@@ -40,25 +41,25 @@ CONFIG_SCHEMA = (
                 unit_of_measurement=UNIT_WATT_HOURS,
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_ENERGY,
-                state_class=STATE_CLASS_MEASUREMENT
+                state_class=STATE_CLASS_TOTAL_INCREASING
             ),
             cv.Optional(CONF_ENERGY_A_NEGATIVE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT_HOURS,
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_ENERGY,
-                state_class=STATE_CLASS_MEASUREMENT
+                state_class=STATE_CLASS_TOTAL_INCREASING
             ),
             cv.Optional(CONF_REACTIVE_ENERGY_A_POSITIVE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_VOLT_AMPS_REACTIVE_HOURS,
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_ENERGY,
-                state_class=STATE_CLASS_MEASUREMENT
+                state_class=STATE_CLASS_TOTAL_INCREASING
             ),
             cv.Optional(CONF_REACTIVE_ENERGY_A_NEGATIVE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_VOLT_AMPS_REACTIVE_HOURS,
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_ENERGY,
-                state_class=STATE_CLASS_MEASUREMENT
+                state_class=STATE_CLASS_TOTAL_INCREASING
             ),
             cv.Optional(CONF_INSTANTANEOUS_POWER_A_POSITIVE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
